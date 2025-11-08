@@ -12,6 +12,9 @@ from pathlib import Path
 
 import re
 import pickle
+import matplotlib.pyplot as plt
+import pandas as pd
+
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "base_encuestados_v2.csv"
 df = pd.read_csv(DATA_PATH).head(1000)     
@@ -110,3 +113,32 @@ print("\nEvaluation results:\n", metrics_output)
 
 with open('metrics.txt', 'w', encoding='utf-8') as outfile:
     outfile.write(metrics_output)
+
+# Crear un DataFrame con los conteos reales y predichos
+df_comp = pd.DataFrame({
+    'Real': pd.Series(y_test_labels).map(dict(enumerate(label_names))),
+    'Predicho': pd.Series(y_preds_labels).map(dict(enumerate(label_names)))
+})
+
+# Conteo de clases reales y predichas
+counts_real = df_comp['Real'].value_counts().sort_index()
+counts_pred = df_comp['Predicho'].value_counts().sort_index()
+
+# Unir en un solo DataFrame comparativo
+df_counts = pd.DataFrame({
+    'Reales': counts_real,
+    'Predichas': counts_pred
+}).reindex(label_names)
+
+# --- GRAFICO DE BARRAS COMPARATIVO ---
+plt.figure(figsize=(8, 6))
+df_counts.plot(kind='bar', color=['skyblue', 'salmon'])
+plt.title('Comparación entre etiquetas Reales y Predichas')
+plt.xlabel('Categorías')
+plt.ylabel('Cantidad de muestras')
+plt.xticks(rotation=0)
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.legend(title='Tipo')
+plt.tight_layout()
+plt.savefig('plots/cuadro_comparativo_labels.png', dpi=300)
+plt.show()
